@@ -1,0 +1,11 @@
+Digital skills refer to the ability to find, evaluate, utilize, share, and create content using digital devices and the internet. These include basic tasks like sending emails, using productivity apps, and understanding online safety.
+
+In India, digital literacy is still a growing challenge. Many people in rural and semi-urban areas lack access to digital infrastructure or the training required to participate fully in a digital society.
+
+The Digital India mission aims to bridge this gap by promoting digital access, digital inclusion, and digital empowerment.
+
+One of the key hackathon goals is to build tools or platforms that assess an individual's current digital skill level and provide guidance or resources to improve.
+
+A basic digital skill assessment could test knowledge in areas such as email use, internet safety, file management, and using online forms.
+
+Digital upskilling is important for employment, education, and accessing government services in today’s digital world.

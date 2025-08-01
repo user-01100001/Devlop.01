@@ -1,0 +1,12 @@
+langchain
+faiss-cpu
+llama-index
+unstructured
+tiktoken
+chromadb
+ollama
+fastapi
+uvicorn
+pydantic
+python-multipart
+requests

@@ -1,0 +1,1567 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Digital Skills Analyzer & Assistant</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Outfit', sans-serif;
+    }
+
+    body {
+      background-color: #121212;
+      color: #fff;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      padding: 20px;
+    }
+
+    /* Language Selector Styles */
+    .language-selector {
+      position: absolute;
+      top: 20px;
+      left: 20px;
+      z-index: 1000;
+    }
+
+    .language-selector select {
+      background: #1e1e1e;
+      color: #fff;
+      border: 1px solid #444;
+      border-radius: 8px;
+      padding: 8px 12px;
+      font-size: 0.9rem;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .language-selector select:hover {
+      border-color: #666;
+      background: #2a2a2a;
+    }
+
+    .language-selector select:focus {
+      outline: none;
+      border-color: #E91E63;
+      box-shadow: 0 0 0 2px rgba(233, 30, 99, 0.2);
+    }
+
+    .language-selector option {
+      background: #1e1e1e;
+      color: #fff;
+      padding: 8px;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 500px;
+      text-align: center;
+    }
+
+    .card {
+      background-color: #1e1e1e;
+      padding: 30px;
+      border-radius: 20px;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
+    }
+
+    h1, h2 {
+      font-size: 2rem;
+      font-weight: 700;
+      margin-bottom: 20px;
+    }
+
+    .score-display {
+      margin: 25px 0;
+    }
+
+    .score-percentage {
+      font-size: 4rem;
+      font-weight: bold;
+      color: #4CAF50;
+      margin-bottom: 15px;
+    }
+
+    .score-bar {
+      width: 120px;
+      height: 120px;
+      margin: 0 auto 15px;
+      position: relative;
+      border-radius: 50%;
+      background: conic-gradient(from 0deg, #E91E63 0deg, #333 0deg 360deg);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2rem;
+      font-weight: bold;
+      color: #E91E63;
+    }
+
+    .score-fill {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      background: conic-gradient(from 0deg, #E91E63 0deg, #9C27B0 var(--progress) 0deg, #333 var(--progress) 360deg);
+      transition: all 1.5s cubic-bezier(0.4, 0, 0.2, 1);
+      animation: progressLoad 1.5s ease-out;
+    }
+
+    @keyframes progressLoad {
+      0% {
+        background: conic-gradient(from 0deg, #E91E63 0deg, #333 0deg 360deg);
+      }
+      100% {
+        background: conic-gradient(from 0deg, #E91E63 0deg, #9C27B0 var(--progress) 0deg, #333 var(--progress) 360deg);
+      }
+    }
+
+    .score-bar::before {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      background: #1e1e1e;
+      z-index: 1;
+    }
+
+    .score-bar span {
+      position: relative;
+      z-index: 2;
+    }
+
+    .score-level {
+      font-size: 1.3rem;
+      font-weight: bold;
+      color: #FFC107;
+    }
+
+    /* Analysis Section */
+    .analysis-grid {
+      display: grid;
+      gap: 20px;
+      margin-bottom: 25px;
+    }
+
+    .analysis-section h3 {
+      font-size: 1.3rem;
+      margin-bottom: 15px;
+      color: #FFC107;
+    }
+
+    .skill-item, .difficulty-item {
+      background: #2a2a2a;
+      padding: 20px;
+      border-radius: 12px;
+      margin-bottom: 15px;
+      border-left: 4px solid #666;
+      animation: fadeInUp 0.6s ease-out;
+      opacity: 0;
+      animation-fill-mode: forwards;
+    }
+
+    @keyframes fadeInUp {
+      0% {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      100% {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .skill-item.strong, .difficulty-item.strong {
+      border-left-color: #4CAF50;
+    }
+
+    .skill-item.moderate, .difficulty-item.moderate {
+      border-left-color: #FF9800;
+    }
+
+    .skill-item.weak, .difficulty-item.weak {
+      border-left-color: #F44336;
+    }
+
+    .skill-header, .difficulty-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+      font-weight: bold;
+    }
+
+    .skill-score, .difficulty-score {
+      color: #FFC107;
+      font-size: 1.2rem;
+    }
+
+    .skill-bar, .difficulty-bar {
+      width: 60px;
+      height: 60px;
+      position: relative;
+      border-radius: 50%;
+      background: conic-gradient(from 0deg, #E91E63 0deg, #444 0deg 360deg);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.9rem;
+      font-weight: bold;
+      color: #E91E63;
+      margin: 0 auto 8px;
+    }
+
+    .skill-fill, .difficulty-fill {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      background: conic-gradient(from 0deg, #E91E63 0deg, #9C27B0 var(--progress) 0deg, #444 var(--progress) 360deg);
+      transition: all 1.2s cubic-bezier(0.4, 0, 0.2, 1);
+      animation: skillProgressLoad 1.2s ease-out;
+    }
+
+    @keyframes skillProgressLoad {
+      0% {
+        background: conic-gradient(from 0deg, #E91E63 0deg, #444 0deg 360deg);
+      }
+      100% {
+        background: conic-gradient(from 0deg, #E91E63 0deg, #9C27B0 var(--progress) 0deg, #444 var(--progress) 360deg);
+      }
+    }
+
+    .skill-bar::before, .difficulty-bar::before {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: #1e1e1e;
+      z-index: 1;
+    }
+
+    .skill-bar span, .difficulty-bar span {
+      position: relative;
+      z-index: 2;
+    }
+
+    .skill-fill.strong, .difficulty-fill.strong {
+      background: conic-gradient(from 0deg, #E91E63 0deg, #9C27B0 var(--progress) 0deg, #444 var(--progress) 360deg);
+      animation: strongProgressLoad 1.2s ease-out;
+    }
+
+    .skill-fill.moderate, .difficulty-fill.moderate {
+      background: conic-gradient(from 0deg, #E91E63 0deg, #9C27B0 var(--progress) 0deg, #444 var(--progress) 360deg);
+      animation: moderateProgressLoad 1.2s ease-out;
+    }
+
+    .skill-fill.weak, .difficulty-fill.weak {
+      background: conic-gradient(from 0deg, #E91E63 0deg, #9C27B0 var(--progress) 0deg, #444 var(--progress) 360deg);
+      animation: weakProgressLoad 1.2s ease-out;
+    }
+
+    @keyframes strongProgressLoad {
+      0% {
+        background: conic-gradient(from 0deg, #E91E63 0deg, #444 0deg 360deg);
+      }
+      100% {
+        background: conic-gradient(from 0deg, #E91E63 0deg, #9C27B0 var(--progress) 0deg, #444 var(--progress) 360deg);
+      }
+    }
+
+    @keyframes moderateProgressLoad {
+      0% {
+        background: conic-gradient(from 0deg, #E91E63 0deg, #444 0deg 360deg);
+      }
+      100% {
+        background: conic-gradient(from 0deg, #E91E63 0deg, #9C27B0 var(--progress) 0deg, #444 var(--progress) 360deg);
+      }
+    }
+
+    @keyframes weakProgressLoad {
+      0% {
+        background: conic-gradient(from 0deg, #E91E63 0deg, #444 0deg 360deg);
+      }
+      100% {
+        background: conic-gradient(from 0deg, #E91E63 0deg, #9C27B0 var(--progress) 0deg, #444 var(--progress) 360deg);
+      }
+    }
+
+    .skill-details, .difficulty-details {
+      font-size: 0.9rem;
+      color: #ccc;
+    }
+
+    /* Recommendations */
+    .recommendations h3 {
+      font-size: 1.3rem;
+      margin-bottom: 15px;
+      color: #FFC107;
+    }
+
+    .recommendations-list {
+      text-align: left;
+    }
+
+    .recommendation-category {
+      background: #2a2a2a;
+      padding: 20px;
+      border-radius: 12px;
+      margin-bottom: 20px;
+    }
+
+    .recommendation-category h4 {
+      color: #4CAF50;
+      margin-bottom: 12px;
+      font-size: 1.1rem;
+    }
+
+    .recommendation-item {
+      margin-bottom: 10px;
+      line-height: 1.5;
+      color: #e0e0e0;
+    }
+
+    .recommendation-item strong {
+      color: #FFC107;
+    }
+
+    /* Chatbot Section */
+    #chatbot-section {
+      display: none;
+    }
+
+    .chat-header {
+      margin-bottom: 25px;
+    }
+
+    .chat-header p {
+      color: #e0e0e0;
+      margin-bottom: 20px;
+    }
+
+    .chat-container {
+      height: 350px;
+      overflow-y: auto;
+      background: #2a2a2a;
+      border-radius: 15px;
+      padding: 20px;
+      margin-bottom: 20px;
+      text-align: left;
+    }
+
+    .chat-message {
+      margin-bottom: 20px;
+    }
+
+    .message-content {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+    }
+
+    .bot-avatar {
+      font-size: 1.8rem;
+      min-width: 35px;
+    }
+
+    .message-text {
+      background: #333;
+      padding: 15px 20px;
+      border-radius: 18px;
+      max-width: 85%;
+      line-height: 1.5;
+    }
+
+    .user-message .message-text {
+      background: linear-gradient(to right, #2196F3, #03A9F4);
+      margin-left: auto;
+    }
+
+    .bot-message .message-text {
+      background: #333;
+    }
+
+    .message-text ul {
+      margin: 10px 0;
+      padding-left: 25px;
+    }
+
+    .message-text li {
+      margin-bottom: 6px;
+    }
+
+    .chat-input-container {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+
+    .chat-input-container input {
+      flex: 1;
+      padding: 15px;
+      border-radius: 12px;
+      border: 1px solid #444;
+      background: #2a2a2a;
+      color: #fff;
+      font-size: 1rem;
+    }
+
+    .chat-input-container input::placeholder {
+      color: #ccc;
+    }
+
+    .chat-input-container button {
+      width: auto;
+      padding: 15px 25px;
+      margin: 0;
+      background: linear-gradient(to right, #4CAF50, #8BC34A);
+    }
+
+    /* Buttons */
+    button {
+      width: 100%;
+      padding: 15px;
+      border: none;
+      border-radius: 12px;
+      background: linear-gradient(to right, #f44336, #e91e63);
+      color: white;
+      font-size: 1rem;
+      font-weight: bold;
+      cursor: pointer;
+      margin-top: 15px;
+      transition: all 0.3s ease;
+    }
+
+    button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+    }
+
+    .action-buttons {
+      display: flex;
+      gap: 15px;
+      margin-top: 20px;
+    }
+
+    .action-buttons button {
+      flex: 1;
+      margin: 0;
+    }
+
+    .primary-btn {
+      background: linear-gradient(to right, #4CAF50, #8BC34A);
+    }
+
+    .secondary-btn {
+      background: linear-gradient(to right, #2196F3, #03A9F4);
+    }
+
+    .accent-btn {
+      background: linear-gradient(to right, #FF9800, #FFC107);
+    }
+
+    /* Navigation */
+    .nav-buttons {
+      display: flex;
+      gap: 15px;
+      margin-top: 25px;
+    }
+
+    .nav-buttons button {
+      flex: 1;
+      margin: 0;
+    }
+
+         /* Progress Tracker Styles */
+     .progress-tracker {
+       background: #2a2a2a;
+       padding: 20px;
+       border-radius: 12px;
+       margin-bottom: 20px;
+     }
+
+     .progress-stats {
+       display: grid;
+       grid-template-columns: repeat(3, 1fr);
+       gap: 15px;
+       margin-bottom: 20px;
+     }
+
+     .progress-stat {
+       text-align: center;
+       padding: 15px;
+       background: #333;
+       border-radius: 10px;
+     }
+
+     .stat-number {
+       display: block;
+       font-size: 2rem;
+       font-weight: bold;
+       color: #E91E63;
+       margin-bottom: 5px;
+     }
+
+     .stat-label {
+       font-size: 0.9rem;
+       color: #ccc;
+     }
+
+     .learning-timeline {
+       background: #333;
+       padding: 15px;
+       border-radius: 10px;
+     }
+
+     .timeline-empty {
+       text-align: center;
+       color: #666;
+       font-style: italic;
+       padding: 20px;
+     }
+
+     /* Content Recommendations Styles */
+     .content-recommendations {
+       background: #2a2a2a;
+       padding: 20px;
+       border-radius: 12px;
+       margin-bottom: 20px;
+     }
+
+     .recommendation-tabs {
+       display: flex;
+       gap: 10px;
+       margin-bottom: 20px;
+     }
+
+     .tab-btn {
+       flex: 1;
+       padding: 10px 15px;
+       background: #333;
+       border: none;
+       border-radius: 8px;
+       color: #fff;
+       cursor: pointer;
+       transition: all 0.3s ease;
+     }
+
+     .tab-btn.active {
+       background: linear-gradient(to right, #E91E63, #9C27B0);
+     }
+
+     .content-grid {
+       display: grid;
+       gap: 15px;
+     }
+
+     .content-card {
+       background: #333;
+       padding: 20px;
+       border-radius: 12px;
+       border-left: 4px solid #E91E63;
+       transition: all 0.3s ease;
+     }
+
+     .content-card:hover {
+       transform: translateY(-2px);
+       box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+     }
+
+     .content-header {
+       display: flex;
+       justify-content: space-between;
+       align-items: flex-start;
+       margin-bottom: 10px;
+     }
+
+     .content-title {
+       font-size: 1.1rem;
+       font-weight: bold;
+       color: #fff;
+       margin-bottom: 5px;
+     }
+
+     .content-meta {
+       font-size: 0.9rem;
+       color: #ccc;
+     }
+
+     .content-description {
+       color: #e0e0e0;
+       line-height: 1.5;
+       margin-bottom: 15px;
+     }
+
+     .content-footer {
+       display: flex;
+       justify-content: space-between;
+       align-items: center;
+     }
+
+     .content-rating {
+       color: #FFC107;
+       font-weight: bold;
+     }
+
+     .content-price {
+       color: #4CAF50;
+       font-weight: bold;
+     }
+
+     .content-btn {
+       padding: 8px 15px;
+       background: linear-gradient(to right, #E91E63, #9C27B0);
+       border: none;
+       border-radius: 6px;
+       color: white;
+       font-size: 0.9rem;
+       cursor: pointer;
+       transition: all 0.3s ease;
+     }
+
+     .content-btn:hover {
+       transform: translateY(-1px);
+     }
+
+     .content-skills {
+       display: flex;
+       flex-wrap: wrap;
+       gap: 5px;
+       margin-top: 10px;
+     }
+
+     .skill-tag {
+       background: #444;
+       color: #E91E63;
+       padding: 3px 8px;
+       border-radius: 12px;
+       font-size: 0.8rem;
+     }
+
+     /* Responsive */
+     @media (max-width: 600px) {
+       .container {
+         max-width: 100%;
+       }
+       
+       .action-buttons, .nav-buttons {
+         flex-direction: column;
+       }
+
+       .progress-stats {
+         grid-template-columns: 1fr;
+       }
+
+       .recommendation-tabs {
+         flex-direction: column;
+       }
+     }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- Language Selector -->
+    <div class="language-selector">
+      <select id="language-select" onchange="changeLanguage(this.value)">
+        <option value="en">English</option>
+        <option value="hi">हिंदी</option>
+      </select>
+    </div>
+
+    <!-- No Results Section -->
+    <div class="card" id="no-results-section" style="display: none;">
+      <h2 data-en="❌ No Quiz Results Found" data-hi="❌ कोई क्विज़ परिणाम नहीं मिला">❌ No Quiz Results Found</h2>
+      <p data-en="It looks like you haven't completed the quiz yet." data-hi="ऐसा लगता है कि आपने अभी तक क्विज़ पूरा नहीं किया है।">It looks like you haven't completed the quiz yet.</p>
+      <div class="action-buttons">
+        <button onclick="goToQuiz()" class="primary-btn" data-en="📊 Take the Quiz" data-hi="📊 क्विज़ लें">📊 Take the Quiz</button>
+      </div>
+    </div>
+
+         <!-- Analysis Section -->
+     <div class="card" id="analysis-section" style="display: none;">
+       <h2 data-en="🔍 Skill Gap Analysis" data-hi="🔍 कौशल अंतराल विश्लेषण">🔍 Skill Gap Analysis</h2>
+       <div id="score-summary" style="margin-bottom: 20px; padding: 15px; background: #2a2a2a; border-radius: 10px;">
+         <h3 style="margin-bottom: 10px;" data-en="📊 Your Quiz Results" data-hi="📊 आपके क्विज़ परिणाम">📊 Your Quiz Results</h3>
+         <div id="result-text" style="font-size: 1.2rem; margin-bottom: 10px;"></div>
+         <div class="score-display" id="score-display"></div>
+       </div>
+       <div class="analysis-content" id="analysis-content"></div>
+       <div class="recommendations" id="recommendations"></div>
+       
+       <!-- Progress Tracker -->
+       <div class="progress-tracker" id="progress-tracker" style="margin-top: 25px;">
+         <h3 style="margin-bottom: 15px; color: #FFC107;" data-en="📈 Learning Progress" data-hi="📈 सीखने की प्रगति">📈 Learning Progress</h3>
+         <div class="progress-stats">
+           <div class="progress-stat">
+             <span class="stat-number" id="courses-completed">0</span>
+             <span class="stat-label" data-en="Courses Completed" data-hi="पूर्ण पाठ्यक्रम">Courses Completed</span>
+           </div>
+           <div class="progress-stat">
+             <span class="stat-number" id="videos-watched">0</span>
+             <span class="stat-label" data-en="Videos Watched" data-hi="देखे गए वीडियो">Videos Watched</span>
+           </div>
+           <div class="progress-stat">
+             <span class="stat-number" id="skills-improved">0</span>
+             <span class="stat-label" data-en="Skills Improved" data-hi="सुधारे गए कौशल">Skills Improved</span>
+           </div>
+         </div>
+         <div class="learning-timeline" id="learning-timeline">
+           <h4 style="margin-bottom: 10px; color: #4CAF50;" data-en="Recent Activity" data-hi="हाल की गतिविधि">Recent Activity</h4>
+           <div class="timeline-empty" data-en="No learning activity yet. Start with recommended courses!" data-hi="अभी तक कोई सीखने की गतिविधि नहीं। अनुशंसित पाठ्यक्रमों से शुरू करें!">No learning activity yet. Start with recommended courses!</div>
+         </div>
+       </div>
+       
+       <!-- Course & Video Recommendations -->
+       <div class="content-recommendations" id="content-recommendations" style="margin-top: 25px;">
+         <h3 style="margin-bottom: 15px; color: #FFC107;" data-en="🎯 Personalized Recommendations" data-hi="🎯 व्यक्तिगत सिफारिशें">🎯 Personalized Recommendations</h3>
+         <div class="recommendation-tabs">
+           <button class="tab-btn active" onclick="showTab('courses')" data-en="📚 Courses" data-hi="📚 पाठ्यक्रम">📚 Courses</button>
+           <button class="tab-btn" onclick="showTab('videos')" data-en="🎥 Videos" data-hi="🎥 वीडियो">🎥 Videos</button>
+         </div>
+         <div class="content-grid" id="courses-grid"></div>
+         <div class="content-grid" id="videos-grid" style="display: none;"></div>
+       </div>
+       
+       <div class="nav-buttons">
+         <button onclick="openChatbot()" class="secondary-btn" data-en="💬 Ask Assistant" data-hi="💬 सहायक से पूछें">💬 Ask Assistant</button>
+         <button onclick="retakeQuiz()" class="primary-btn" data-en="🔄 Retake Quiz" data-hi="🔄 क्विज़ फिर से लें">🔄 Retake Quiz</button>
+         <button onclick="clearResults()" class="accent-btn" data-en="🗑️ Clear Results" data-hi="🗑️ परिणाम साफ़ करें">🗑️ Clear Results</button>
+       </div>
+     </div>
+
+    <!-- Chatbot Section -->
+    <div class="card" id="chatbot-section">
+      <div class="chat-header">
+        <h2 data-en="🤖 Digital Skills Assistant" data-hi="🤖 डिजिटल कौशल सहायक">🤖 Digital Skills Assistant</h2>
+        <p data-en="Ask me anything about digital skills, cybersecurity, or learning resources!" data-hi="डिजिटल कौशल, साइबर सुरक्षा, या सीखने के संसाधनों के बारे में कुछ भी पूछें!">Ask me anything about digital skills, cybersecurity, or learning resources!</p>
+      </div>
+      
+      <div class="chat-container" id="chat-container">
+        <div class="chat-message bot-message">
+          <div class="message-content">
+            <div class="bot-avatar">🤖</div>
+            <div class="message-text">
+              Hi! I'm your Digital Skills Assistant. I can help you with:
+              <ul>
+                <li>📚 Digital literacy questions</li>
+                <li>🔒 Cybersecurity advice</li>
+                <li>🌐 Web fundamentals</li>
+                <li>💡 Learning recommendations</li>
+                <li>🎯 Skill improvement tips</li>
+              </ul>
+              What would you like to know?
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="chat-input-container">
+        <input type="text" id="chat-input" data-en-placeholder="Type your question here..." data-hi-placeholder="यहां अपना प्रश्न टाइप करें..." placeholder="Type your question here..." maxlength="500">
+        <button id="send-btn" data-en="Send" data-hi="भेजें">Send</button>
+      </div>
+      
+      <div class="nav-buttons">
+        <button onclick="goToQuiz()" class="primary-btn" data-en="📊 Take Assessment" data-hi="📊 मूल्यांकन लें">📊 Take Assessment</button>
+        <button onclick="showAnalysis()" class="secondary-btn" data-en="📊 View Analysis" data-hi="📊 विश्लेषण देखें">📊 View Analysis</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let quizResults = null;
+    let score = 10;
+    let userAnswers = [];
+
+    // Content recommendation system with embeddings
+    const contentDatabase = {
+      courses: [
+        {
+          id: 1,
+          title: "Complete Web Development Bootcamp",
+          instructor: "Dr. Angela Yu",
+          platform: "Udemy",
+          duration: "44 hours",
+          rating: 4.7,
+          price: "$29.99",
+          level: "Beginner",
+          skills: ["Web Fundamentals", "HTML", "CSS", "JavaScript"],
+          tags: ["web", "development", "html", "css", "javascript"],
+          description: "Learn web development from scratch with HTML, CSS, JavaScript, Node.js, and more.",
+          url: "https://www.udemy.com/course/the-complete-web-development-bootcamp/"
+        },
+        {
+          id: 2,
+          title: "Cybersecurity Fundamentals",
+          instructor: "Mike Chapple",
+          platform: "Coursera",
+          duration: "8 weeks",
+          rating: 4.8,
+          price: "Free",
+          level: "Intermediate",
+          skills: ["Cybersecurity", "Network Security", "Ethical Hacking"],
+          tags: ["cybersecurity", "security", "hacking", "network"],
+          description: "Learn the fundamentals of cybersecurity and how to protect systems and networks.",
+          url: "https://www.coursera.org/learn/cybersecurity-fundamentals"
+        },
+        {
+          id: 3,
+          title: "Digital Literacy for Everyone",
+          instructor: "Google Digital Garage",
+          platform: "Google",
+          duration: "6 hours",
+          rating: 4.6,
+          price: "Free",
+          level: "Beginner",
+          skills: ["Digital Literacy", "Internet Safety", "Online Communication"],
+          tags: ["digital", "literacy", "internet", "safety"],
+          description: "Master essential digital skills for the modern world.",
+          url: "https://learndigital.withgoogle.com/digitalgarage/"
+        },
+        {
+          id: 4,
+          title: "Advanced Web Security",
+          instructor: "OWASP",
+          platform: "YouTube",
+          duration: "3 hours",
+          rating: 4.9,
+          price: "Free",
+          level: "Advanced",
+          skills: ["Cybersecurity", "Web Security", "Penetration Testing"],
+          tags: ["security", "web", "penetration", "testing"],
+          description: "Advanced web security concepts and penetration testing techniques.",
+          url: "https://www.youtube.com/watch?v=example"
+        },
+        {
+          id: 5,
+          title: "JavaScript Masterclass",
+          instructor: "Jonas Schmedtmann",
+          platform: "Udemy",
+          duration: "52 hours",
+          rating: 4.8,
+          price: "$34.99",
+          level: "Intermediate",
+          skills: ["JavaScript", "ES6+", "DOM Manipulation"],
+          tags: ["javascript", "programming", "es6", "dom"],
+          description: "Master modern JavaScript with ES6+ features and advanced concepts.",
+          url: "https://www.udemy.com/course/javascript-beginner-to-advanced/"
+        }
+      ],
+      videos: [
+        {
+          id: 1,
+          title: "What is HTTPS?",
+          channel: "Techquickie",
+          duration: "4:32",
+          views: "2.1M",
+          skills: ["Web Fundamentals", "Cybersecurity"],
+          tags: ["https", "security", "web"],
+          url: "https://www.youtube.com/watch?v=example1"
+        },
+        {
+          id: 2,
+          title: "Password Security Best Practices",
+          channel: "Computerphile",
+          duration: "8:15",
+          views: "1.8M",
+          skills: ["Cybersecurity"],
+          tags: ["password", "security", "cybersecurity"],
+          url: "https://www.youtube.com/watch?v=example2"
+        },
+        {
+          id: 3,
+          title: "How the Internet Works",
+          channel: "Kurzgesagt",
+          duration: "6:42",
+          views: "3.2M",
+          skills: ["Web Fundamentals", "Digital Literacy"],
+          tags: ["internet", "web", "technology"],
+          url: "https://www.youtube.com/watch?v=example3"
+        }
+      ]
+    };
+
+    // Simple KNN-based recommendation system
+    function calculateSimilarity(userSkills, contentSkills) {
+      const userSkillSet = new Set(userSkills.map(skill => skill.toLowerCase()));
+      const contentSkillSet = new Set(contentSkills.map(skill => skill.toLowerCase()));
+      
+      const intersection = new Set([...userSkillSet].filter(x => contentSkillSet.has(x)));
+      const union = new Set([...userSkillSet, ...contentSkillSet]);
+      
+      return intersection.size / union.size; // Jaccard similarity
+    }
+
+    function getRecommendations(userSkills, userWeakAreas, count = 3) {
+      const allContent = [...contentDatabase.courses, ...contentDatabase.videos];
+      const recommendations = [];
+      
+      // Prioritize content that matches weak areas
+      const weakAreaContent = allContent.filter(content => 
+        content.skills.some(skill => 
+          userWeakAreas.some(weakArea => 
+            skill.toLowerCase().includes(weakArea.toLowerCase())
+          )
+        )
+      );
+      
+      // Calculate similarity scores
+      const scoredContent = allContent.map(content => ({
+        ...content,
+        score: calculateSimilarity(userSkills, content.skills),
+        isWeakArea: weakAreaContent.includes(content)
+      }));
+      
+      // Sort by weak area priority and similarity score
+      scoredContent.sort((a, b) => {
+        if (a.isWeakArea && !b.isWeakArea) return -1;
+        if (!a.isWeakArea && b.isWeakArea) return 1;
+        return b.score + a.score;
+      });
+      
+      return scoredContent.slice(0, count);
+    }
+
+
+
+    // Navigation functions
+    function openChatbot() {
+      hideAllSections();
+      document.getElementById('chatbot-section').style.display = 'block';
+    }
+
+    function showAnalysis() {
+      hideAllSections();
+      document.getElementById('analysis-section').style.display = 'block';
+    }
+
+    function goToQuiz() {
+      window.location.href = 'index.html';
+    }
+
+    function hideAllSections() {
+      document.getElementById('no-results-section').style.display = 'none';
+      document.getElementById('analysis-section').style.display = 'none';
+      document.getElementById('chatbot-section').style.display = 'none';
+    }
+
+    function retakeQuiz() {
+      localStorage.removeItem('quizResults');
+      window.location.href = 'index.html';
+    }
+
+    function clearResults() {
+      localStorage.removeItem('quizResults');
+      document.getElementById('analysis-section').style.display = 'none';
+      document.getElementById('no-results-section').style.display = 'block';
+    }
+
+    function displayResults() {
+      const percentage = Math.round((score / userAnswers.length) * 100);
+      document.getElementById("result-text").textContent = `✅ You scored ${score} out of ${userAnswers.length}`;
+      
+      const scoreDisplay = document.getElementById("score-display");
+      scoreDisplay.innerHTML = `
+        <div class="score-percentage">${percentage}%</div>
+        <div class="score-bar">
+          <div class="score-fill" style="--progress: ${percentage * 3.6}deg"></div>
+          <span>${percentage}%</span>
+        </div>
+        <div class="score-level">
+          ${getScoreLevel(percentage)}
+        </div>
+      `;
+    }
+
+    function getScoreLevel(percentage) {
+      if (percentage >= 90) return "🎯 Expert Level";
+      if (percentage >= 70) return "🚀 Advanced Level";
+      if (percentage >= 50) return "📚 Intermediate Level";
+      if (percentage >= 30) return "🔰 Beginner Level";
+      return "🌱 Novice Level";
+    }
+
+    function performSkillGapAnalysis() {
+      const skillAnalysis = {};
+      const difficultyAnalysis = {};
+      
+      userAnswers.forEach(answer => {
+        const skill = answer.skill;
+        const difficulty = answer.difficulty;
+        
+        if (!skillAnalysis[skill]) {
+          skillAnalysis[skill] = { correct: 0, total: 0 };
+        }
+        if (!difficultyAnalysis[difficulty]) {
+          difficultyAnalysis[difficulty] = { correct: 0, total: 0 };
+        }
+        
+        skillAnalysis[skill].total++;
+        difficultyAnalysis[difficulty].total++;
+        
+        if (answer.isCorrect) {
+          skillAnalysis[skill].correct++;
+          difficultyAnalysis[difficulty].correct++;
+        }
+      });
+      
+      Object.keys(skillAnalysis).forEach(skill => {
+        skillAnalysis[skill].percentage = Math.round((skillAnalysis[skill].correct / skillAnalysis[skill].total) * 100);
+      });
+      
+      Object.keys(difficultyAnalysis).forEach(difficulty => {
+        difficultyAnalysis[difficulty].percentage = Math.round((difficultyAnalysis[difficulty].correct / difficultyAnalysis[difficulty].total) * 100);
+      });
+      
+      displayAnalysis(skillAnalysis, difficultyAnalysis);
+      generateRecommendations(skillAnalysis, difficultyAnalysis);
+    }
+
+    function displayAnalysis(skillAnalysis, difficultyAnalysis) {
+      const analysisContent = document.getElementById("analysis-content");
+      
+      let analysisHTML = '<div class="analysis-grid">';
+      
+      // Skill-based analysis
+      analysisHTML += '<div class="analysis-section">';
+      analysisHTML += '<h3>📊 Skill Performance</h3>';
+      
+      Object.keys(skillAnalysis).forEach((skill, index) => {
+        const data = skillAnalysis[skill];
+        const strength = data.percentage >= 70 ? 'strong' : data.percentage >= 50 ? 'moderate' : 'weak';
+        const emoji = data.percentage >= 70 ? '✅' : data.percentage >= 50 ? '⚠️' : '❌';
+        
+        analysisHTML += `
+          <div class="skill-item ${strength}" style="animation-delay: ${index * 0.2}s;">
+            <div class="skill-header">
+              <span>${emoji} ${skill}</span>
+              <span class="skill-score">${data.percentage}%</span>
+            </div>
+            <div class="skill-bar">
+              <div class="skill-fill ${strength}" style="--progress: ${data.percentage * 3.6}deg; animation-delay: ${index * 0.2 + 0.5}s;"></div>
+              <span>${data.percentage}%</span>
+            </div>
+            <div class="skill-details">${data.correct}/${data.total} correct</div>
+          </div>
+        `;
+      });
+      
+      analysisHTML += '</div>';
+      
+      // Difficulty-based analysis
+      analysisHTML += '<div class="analysis-section">';
+      analysisHTML += '<h3>🎯 Difficulty Level Performance</h3>';
+      
+      Object.keys(difficultyAnalysis).forEach((difficulty, index) => {
+        const data = difficultyAnalysis[difficulty];
+        const strength = data.percentage >= 70 ? 'strong' : data.percentage >= 50 ? 'moderate' : 'weak';
+        const emoji = data.percentage >= 70 ? '✅' : data.percentage >= 50 ? '⚠️' : '❌';
+        
+        analysisHTML += `
+          <div class="difficulty-item ${strength}" style="animation-delay: ${index * 0.2}s;">
+            <div class="difficulty-header">
+              <span>${emoji} ${difficulty}</span>
+              <span class="difficulty-score">${data.percentage}%</span>
+            </div>
+            <div class="difficulty-bar">
+              <div class="difficulty-fill ${strength}" style="--progress: ${data.percentage * 3.6}deg; animation-delay: ${index * 0.2 + 0.5}s;"></div>
+              <span>${data.percentage}%</span>
+            </div>
+            <div class="difficulty-details">${data.correct}/${data.total} correct</div>
+          </div>
+        `;
+      });
+      
+      analysisHTML += '</div></div>';
+      
+      analysisContent.innerHTML = analysisHTML;
+    }
+
+         function generateRecommendations(skillAnalysis, difficultyAnalysis) {
+       const recommendationsDiv = document.getElementById("recommendations");
+       let recommendationsHTML = '<h3>💡 Personalized Recommendations</h3>';
+       
+       const weakSkills = Object.keys(skillAnalysis).filter(skill => skillAnalysis[skill].percentage < 50);
+       const weakDifficulties = Object.keys(difficultyAnalysis).filter(difficulty => difficultyAnalysis[difficulty].percentage < 50);
+       
+       recommendationsHTML += '<div class="recommendations-list">';
+       
+       if (weakSkills.length > 0) {
+         recommendationsHTML += '<div class="recommendation-category">';
+         recommendationsHTML += '<h4>🔧 Skills to Improve</h4>';
+         weakSkills.forEach(skill => {
+           recommendationsHTML += `<div class="recommendation-item">
+             <strong>${skill}:</strong> ${getSkillRecommendations(skill)}
+           </div>`;
+         });
+         recommendationsHTML += '</div>';
+       }
+       
+       if (weakDifficulties.length > 0) {
+         recommendationsHTML += '<div class="recommendation-category">';
+         recommendationsHTML += '<h4>📈 Difficulty Level Focus</h4>';
+         weakDifficulties.forEach(difficulty => {
+           recommendationsHTML += `<div class="recommendation-item">
+             <strong>${difficulty} Level:</strong> ${getDifficultyRecommendations(difficulty)}
+           </div>`;
+         });
+         recommendationsHTML += '</div>';
+       }
+       
+       const overallScore = Math.round((score / userAnswers.length) * 100);
+       recommendationsHTML += '<div class="recommendation-category">';
+       recommendationsHTML += '<h4>🎯 Next Steps</h4>';
+       recommendationsHTML += `<div class="recommendation-item">${getOverallRecommendations(overallScore)}</div>`;
+       recommendationsHTML += '</div>';
+       
+       recommendationsHTML += '</div>';
+       recommendationsDiv.innerHTML = recommendationsHTML;
+       
+       // Generate content recommendations
+       generateContentRecommendations(weakSkills);
+     }
+
+     function generateContentRecommendations(weakSkills) {
+       const userSkills = Object.keys(skillAnalysis || {});
+       const recommendations = getRecommendations(userSkills, weakSkills, 6);
+       
+       const coursesGrid = document.getElementById('courses-grid');
+       const videosGrid = document.getElementById('videos-grid');
+       
+       let coursesHTML = '';
+       let videosHTML = '';
+       
+       recommendations.forEach(content => {
+         const contentCard = `
+           <div class="content-card">
+             <div class="content-header">
+               <div>
+                 <div class="content-title">${content.title}</div>
+                 <div class="content-meta">
+                   ${content.instructor || content.channel} • ${content.duration} • ${content.platform || 'YouTube'}
+                 </div>
+               </div>
+               <div class="content-rating">⭐ ${content.rating}</div>
+             </div>
+             <div class="content-description">${content.description}</div>
+             <div class="content-skills">
+               ${content.skills.map(skill => `<span class="skill-tag">${skill}</span>`).join('')}
+             </div>
+             <div class="content-footer">
+               <span class="content-price">${content.price}</span>
+               <button class="content-btn" onclick="markAsCompleted(${content.id}, '${content.title}')">
+                 Start Learning
+               </button>
+             </div>
+           </div>
+         `;
+         
+         if (content.platform) {
+           coursesHTML += contentCard;
+         } else {
+           videosHTML += contentCard;
+         }
+       });
+       
+       coursesGrid.innerHTML = coursesHTML;
+       videosGrid.innerHTML = videosHTML;
+     }
+
+     function showTab(tabName) {
+       // Update tab buttons
+       document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+       event.target.classList.add('active');
+       
+       // Show/hide content grids
+       document.getElementById('courses-grid').style.display = tabName === 'courses' ? 'grid' : 'none';
+       document.getElementById('videos-grid').style.display = tabName === 'videos' ? 'grid' : 'none';
+     }
+
+     function markAsCompleted(contentId, contentTitle) {
+       // Get current progress from localStorage
+       let progress = JSON.parse(localStorage.getItem('learningProgress')) || {
+         coursesCompleted: 0,
+         videosWatched: 0,
+         skillsImproved: 0,
+         timeline: []
+       };
+       
+       // Determine if it's a course or video
+       const isCourse = contentDatabase.courses.some(course => course.id === contentId);
+       
+       if (isCourse) {
+         progress.coursesCompleted++;
+       } else {
+         progress.videosWatched++;
+       }
+       
+       // Add to timeline
+       const timelineEntry = {
+         id: Date.now(),
+         type: isCourse ? 'course' : 'video',
+         title: contentTitle,
+         date: new Date().toLocaleDateString(),
+         time: new Date().toLocaleTimeString()
+       };
+       
+       progress.timeline.unshift(timelineEntry);
+       
+       // Keep only last 10 entries
+       if (progress.timeline.length > 10) {
+         progress.timeline = progress.timeline.slice(0, 10);
+       }
+       
+       // Save to localStorage
+       localStorage.setItem('learningProgress', JSON.stringify(progress));
+       
+       // Update UI
+       updateProgressDisplay();
+       
+       // Show success message
+       alert(`Great! You've started "${contentTitle}". Keep up the good work! 🎉`);
+     }
+
+     function updateProgressDisplay() {
+       const progress = JSON.parse(localStorage.getItem('learningProgress')) || {
+         coursesCompleted: 0,
+         videosWatched: 0,
+         skillsImproved: 0,
+         timeline: []
+       };
+       
+       // Update stats
+       document.getElementById('courses-completed').textContent = progress.coursesCompleted;
+       document.getElementById('videos-watched').textContent = progress.videosWatched;
+       document.getElementById('skills-improved').textContent = progress.skillsImproved;
+       
+       // Update timeline
+       const timeline = document.getElementById('learning-timeline');
+       if (progress.timeline.length === 0) {
+         timeline.innerHTML = '<h4 style="margin-bottom: 10px; color: #4CAF50;">Recent Activity</h4><div class="timeline-empty">No learning activity yet. Start with recommended courses!</div>';
+       } else {
+         let timelineHTML = '<h4 style="margin-bottom: 10px; color: #4CAF50;">Recent Activity</h4>';
+         progress.timeline.forEach(entry => {
+           const icon = entry.type === 'course' ? '📚' : '🎥';
+           timelineHTML += `
+             <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px; padding: 10px; background: #444; border-radius: 8px;">
+               <span style="font-size: 1.2rem;">${icon}</span>
+               <div style="flex: 1;">
+                 <div style="font-weight: bold; color: #fff;">${entry.title}</div>
+                 <div style="font-size: 0.8rem; color: #ccc;">${entry.date} at ${entry.time}</div>
+               </div>
+             </div>
+           `;
+         });
+         timeline.innerHTML = timelineHTML;
+       }
+     }
+
+    function getSkillRecommendations(skill) {
+      const recommendations = {
+        "Web Fundamentals": "Focus on understanding URLs, HTTP protocols, and basic web concepts. Practice with browser developer tools and learn about domain names.",
+        "Cybersecurity": "Learn about secure connections (HTTPS), password security, two-factor authentication, and common online threats. Consider cybersecurity courses."
+      };
+      return recommendations[skill] || "Focus on this area through practice and study.";
+    }
+
+    function getDifficultyRecommendations(difficulty) {
+      const recommendations = {
+        "Basic": "Start with fundamental concepts and build a strong foundation before moving to advanced topics. Practice regularly.",
+        "Intermediate": "Practice with real-world scenarios and hands-on exercises to strengthen your understanding. Consider intermediate-level courses."
+      };
+      return recommendations[difficulty] || "Focus on this difficulty level through targeted practice.";
+    }
+
+    function getOverallRecommendations(overallScore) {
+      if (overallScore >= 90) {
+        return "Excellent performance! Consider advanced topics and specialized certifications to further enhance your expertise.";
+      } else if (overallScore >= 70) {
+        return "Good foundation! Focus on your weak areas and consider intermediate-level courses to strengthen your skills.";
+      } else if (overallScore >= 50) {
+        return "You have a basic understanding. Focus on fundamental concepts and consider beginner-friendly courses to build a stronger foundation.";
+      } else {
+        return "Start with basic digital literacy courses and gradually build your knowledge. Don't hesitate to seek help from online resources and tutorials.";
+      }
+    }
+
+    // API Configuration
+    const API_BASE_URL = 'http://localhost:8000';
+    let currentUserId = localStorage.getItem('currentUserId');
+
+    // Chatbot functions
+    document.getElementById('send-btn').addEventListener('click', sendMessage);
+    document.getElementById('chat-input').addEventListener('keypress', (e) => {
+      if (e.key === "Enter") {
+        sendMessage();
+      }
+    });
+
+    async function sendMessage() {
+      const message = document.getElementById('chat-input').value.trim();
+      if (message === "") return;
+      
+      addMessage(message, "user");
+      document.getElementById('chat-input').value = "";
+      
+      // Show typing indicator
+      const typingDiv = document.createElement("div");
+      typingDiv.className = "chat-message bot-message";
+      typingDiv.innerHTML = `
+        <div class="message-content">
+          <div class="bot-avatar">🤖</div>
+          <div class="message-text">Typing...</div>
+        </div>
+      `;
+      document.getElementById('chat-container').appendChild(typingDiv);
+      document.getElementById('chat-container').scrollTop = document.getElementById('chat-container').scrollHeight;
+      
+      try {
+        // Send message to backend RAG bot
+        const response = await fetch(`${API_BASE_URL}/chat`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            message: message,
+            user_id: currentUserId || 'anonymous'
+          })
+        });
+        
+        const data = await response.json();
+        
+        // Remove typing indicator
+        document.getElementById('chat-container').removeChild(typingDiv);
+        
+        // Add bot response
+        addMessage(data.response, "bot");
+      } catch (error) {
+        console.error('Error chatting with bot:', error);
+        
+        // Remove typing indicator
+        document.getElementById('chat-container').removeChild(typingDiv);
+        
+        // Add error message
+        addMessage("I'm sorry, I'm having trouble connecting to the server right now. Please try again later.", "bot");
+      }
+    }
+
+    function addMessage(text, sender) {
+      const messageDiv = document.createElement("div");
+      messageDiv.className = `chat-message ${sender}-message`;
+      
+      const messageContent = document.createElement("div");
+      messageContent.className = "message-content";
+      
+      if (sender === "bot") {
+        const avatar = document.createElement("div");
+        avatar.className = "bot-avatar";
+        avatar.textContent = "🤖";
+        messageContent.appendChild(avatar);
+      }
+      
+      const messageText = document.createElement("div");
+      messageText.className = "message-text";
+      messageText.innerHTML = text;
+      messageContent.appendChild(messageText);
+      
+      messageDiv.appendChild(messageContent);
+      document.getElementById('chat-container').appendChild(messageDiv);
+      
+      document.getElementById('chat-container').scrollTop = document.getElementById('chat-container').scrollHeight;
+    }
+
+         
+
+    // Language translations for analyzer
+    const analyzerTranslations = {
+      en: {
+        "❌ No Quiz Results Found": "❌ No Quiz Results Found",
+        "It looks like you haven't completed the quiz yet.": "It looks like you haven't completed the quiz yet.",
+        "📊 Take the Quiz": "📊 Take the Quiz",
+        "🔍 Skill Gap Analysis": "🔍 Skill Gap Analysis",
+        "📊 Your Quiz Results": "📊 Your Quiz Results",
+        "📈 Learning Progress": "📈 Learning Progress",
+        "Courses Completed": "Courses Completed",
+        "Videos Watched": "Videos Watched",
+        "Skills Improved": "Skills Improved",
+        "Recent Activity": "Recent Activity",
+        "No learning activity yet. Start with recommended courses!": "No learning activity yet. Start with recommended courses!",
+        "🎯 Personalized Recommendations": "🎯 Personalized Recommendations",
+        "📚 Courses": "📚 Courses",
+        "🎥 Videos": "🎥 Videos",
+        "💬 Ask Assistant": "💬 Ask Assistant",
+        "🔄 Retake Quiz": "🔄 Retake Quiz",
+        "🗑️ Clear Results": "🗑️ Clear Results",
+        "🤖 Digital Skills Assistant": "🤖 Digital Skills Assistant",
+        "Ask me anything about digital skills, cybersecurity, or learning resources!": "Ask me anything about digital skills, cybersecurity, or learning resources!",
+        "Type your question here...": "Type your question here...",
+        "Send": "Send",
+        "📊 Take Assessment": "📊 Take Assessment",
+        "📊 View Analysis": "📊 View Analysis"
+      },
+      hi: {
+        "❌ No Quiz Results Found": "❌ कोई क्विज़ परिणाम नहीं मिला",
+        "It looks like you haven't completed the quiz yet.": "ऐसा लगता है कि आपने अभी तक क्विज़ पूरा नहीं किया है।",
+        "📊 Take the Quiz": "📊 क्विज़ लें",
+        "🔍 Skill Gap Analysis": "🔍 कौशल अंतराल विश्लेषण",
+        "📊 Your Quiz Results": "📊 आपके क्विज़ परिणाम",
+        "📈 Learning Progress": "📈 सीखने की प्रगति",
+        "Courses Completed": "पूर्ण पाठ्यक्रम",
+        "Videos Watched": "देखे गए वीडियो",
+        "Skills Improved": "सुधारे गए कौशल",
+        "Recent Activity": "हाल की गतिविधि",
+        "No learning activity yet. Start with recommended courses!": "अभी तक कोई सीखने की गतिविधि नहीं। अनुशंसित पाठ्यक्रमों से शुरू करें!",
+        "🎯 Personalized Recommendations": "🎯 व्यक्तिगत सिफारिशें",
+        "📚 Courses": "📚 पाठ्यक्रम",
+        "🎥 Videos": "🎥 वीडियो",
+        "💬 Ask Assistant": "💬 सहायक से पूछें",
+        "🔄 Retake Quiz": "🔄 क्विज़ फिर से लें",
+        "🗑️ Clear Results": "🗑️ परिणाम साफ़ करें",
+        "🤖 Digital Skills Assistant": "🤖 डिजिटल कौशल सहायक",
+        "Ask me anything about digital skills, cybersecurity, or learning resources!": "डिजिटल कौशल, साइबर सुरक्षा, या सीखने के संसाधनों के बारे में कुछ भी पूछें!",
+        "Type your question here...": "यहां अपना प्रश्न टाइप करें...",
+        "Send": "भेजें",
+        "📊 Take Assessment": "📊 मूल्यांकन लें",
+        "📊 View Analysis": "📊 विश्लेषण देखें"
+      }
+    };
+
+    // Function to change language for analyzer
+    function changeLanguage(lang) {
+      // Update all elements with data attributes
+      document.querySelectorAll('[data-en]').forEach(element => {
+        if (element.tagName === 'INPUT' && element.hasAttribute('data-en-placeholder')) {
+          element.placeholder = analyzerTranslations[lang][element.getAttribute('data-en-placeholder')];
+        } else {
+          element.textContent = analyzerTranslations[lang][element.getAttribute('data-en')];
+        }
+      });
+
+      // Store language preference
+      localStorage.setItem('selectedLanguage', lang);
+    }
+
+    // Initialize language on page load
+    window.addEventListener('load', function() {
+      const savedLanguage = localStorage.getItem('selectedLanguage') || 'en';
+      document.getElementById('language-select').value = savedLanguage;
+      changeLanguage(savedLanguage);
+    });
+
+    // Initialize page with quiz results
+    window.onload = function() {
+      const storedResults = localStorage.getItem('quizResults');
+      if (!storedResults) {
+        document.getElementById('no-results-section').style.display = 'block';
+        return;
+      }
+
+      try {
+        quizResults = JSON.parse(storedResults);
+        
+        // Handle both old and new result formats
+        if (quizResults.score !== undefined) {
+        score = quizResults.score;
+          totalQuestions = quizResults.total || 10;
+          
+          // Convert backend format to frontend format
+          if (quizResults.answers) {
+            userAnswers = quizResults.answers.map(answer => ({
+              questionIndex: answer.question_id - 1,
+              selectedAnswer: answer.selected_answer,
+              isCorrect: answer.selected_answer === getCorrectAnswer(answer.question_id),
+              skill: getQuestionSkill(answer.question_id),
+              difficulty: getQuestionDifficulty(answer.question_id),
+              timeTaken: answer.time_taken || 0
+            }));
+          }
+        } else {
+          // Old format
+          score = quizResults.score || 0;
+          userAnswers = quizResults.userAnswers || [];
+        }
+        
+                 // Show analysis immediately
+         document.getElementById('analysis-section').style.display = 'block';
+         displayResults();
+         performSkillGapAnalysis();
+         updateProgressDisplay();
+        
+      } catch (error) {
+        console.error('Error parsing quiz results:', error);
+        document.getElementById('no-results-section').style.display = 'block';
+      }
+    };
+
+    // Helper functions to get question data
+    function getCorrectAnswer(questionId) {
+      const questions = [
+        { id: 1, correct: 1, skill: "Web Fundamentals", difficulty: "Basic" },
+        { id: 2, correct: 0, skill: "Cybersecurity", difficulty: "Intermediate" },
+        { id: 3, correct: 1, skill: "Cybersecurity", difficulty: "Intermediate" },
+        { id: 4, correct: 2, skill: "Cybersecurity", difficulty: "Basic" },
+        { id: 5, correct: 1, skill: "Cybersecurity", difficulty: "Intermediate" },
+        { id: 6, correct: 2, skill: "Web Fundamentals", difficulty: "Basic" },
+        { id: 7, correct: 1, skill: "Web Fundamentals", difficulty: "Intermediate" },
+        { id: 8, correct: 1, skill: "Cybersecurity", difficulty: "Intermediate" },
+        { id: 9, correct: 1, skill: "Cybersecurity", difficulty: "Advanced" },
+        { id: 10, correct: 1, skill: "Cybersecurity", difficulty: "Advanced" }
+      ];
+      const question = questions.find(q => q.id === questionId);
+      return question ? question.correct : 0;
+    }
+
+    function getQuestionSkill(questionId) {
+      const questions = [
+        { id: 1, skill: "Web Fundamentals" },
+        { id: 2, skill: "Cybersecurity" },
+        { id: 3, skill: "Cybersecurity" },
+        { id: 4, skill: "Cybersecurity" },
+        { id: 5, skill: "Cybersecurity" },
+        { id: 6, skill: "Web Fundamentals" },
+        { id: 7, skill: "Web Fundamentals" },
+        { id: 8, skill: "Cybersecurity" },
+        { id: 9, skill: "Cybersecurity" },
+        { id: 10, skill: "Cybersecurity" }
+      ];
+      const question = questions.find(q => q.id === questionId);
+      return question ? question.skill : "General";
+    }
+
+    function getQuestionDifficulty(questionId) {
+      const questions = [
+        { id: 1, difficulty: "Basic" },
+        { id: 2, difficulty: "Intermediate" },
+        { id: 3, difficulty: "Intermediate" },
+        { id: 4, difficulty: "Basic" },
+        { id: 5, difficulty: "Intermediate" },
+        { id: 6, difficulty: "Basic" },
+        { id: 7, difficulty: "Intermediate" },
+        { id: 8, difficulty: "Intermediate" },
+        { id: 9, difficulty: "Advanced" },
+        { id: 10, difficulty: "Advanced" }
+      ];
+      const question = questions.find(q => q.id === questionId);
+      return question ? question.difficulty : "Basic";
+    }
+  </script>
+</body>
+</html> 

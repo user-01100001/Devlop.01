@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Digital Skill Advisor</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="container">
+    <!-- Language Selector -->
+    <div class="language-selector">
+      <select id="language-select" onchange="changeLanguage(this.value)">
+        <option value="en">English</option>
+        <option value="hi">हिंदी</option>
+      </select>
+    </div>
+
+    <div class="card" id="login-section">
+      <h2 data-en="Login" data-hi="लॉगिन">Login</h2>
+      <form id="login-form">
+        <input type="email" id="email" data-en-placeholder="Email" data-hi-placeholder="ईमेल" placeholder="Email" required>
+        <input type="password" id="password" data-en-placeholder="Password" data-hi-placeholder="पासवर्ड" placeholder="Password" required>
+        <button type="submit" data-en="Login" data-hi="लॉगिन">Login</button>
+      </form>
+    </div>
+
+    <div class="card" id="quiz-section">
+      <div class="question-tracker" id="tracker">0</div>
+      <h2 data-en="🎯 Let's test your knowledge!" data-hi="🎯 आइए आपका ज्ञान जांचते हैं!">🎯 Let's test your knowledge!</h2>
+      <p data-en="Ready to begin? Let's go! 🚀" data-hi="शुरू करने के लिए तैयार? चलिए शुरू करते हैं! 🚀">Ready to begin? Let's go! 🚀</p>
+      <div class="question-box" id="question-box"></div>
+      <button id="next-btn" data-en="Next" data-hi="अगला">Next</button>
+    </div>
+
+    <div class="card" id="result-section">
+      <h2 data-en="Quiz Completed!" data-hi="क्विज़ पूरा हुआ!">Quiz Completed!</h2>
+      <div id="result-text" data-en="✅ You scored X out of Y" data-hi="✅ आपने Y में से X अंक प्राप्त किए">✅ You scored X out of Y</div>
+      <div class="score-display" id="score-display"></div>
+      <button id="analyze-btn" data-en="Analyze Skill Gaps" data-hi="कौशल अंतराल का विश्लेषण करें">Analyze Skill Gaps</button>
+    </div>
+
+    <div class="card" id="analysis-section">
+      <h2 data-en="🔍 Skill Gap Analysis" data-hi="🔍 कौशल अंतराल विश्लेषण">🔍 Skill Gap Analysis</h2>
+      <div class="analysis-content" id="analysis-content"></div>
+      <div class="recommendations" id="recommendations"></div>
+      <button id="retake-btn" data-en="Retake Quiz" data-hi="क्विज़ फिर से लें">Retake Quiz</button>
+      <button id="back-to-login" data-en="Back to Login" data-hi="लॉगिन पर वापस जाएं">Back to Login</button>
+    </div>
+  </div>
+  
+
+  <script src="script.js"></script>
+  <script>
+    // Language translations
+    const translations = {
+      en: {
+        // Quiz questions and options will be handled in script.js
+        "Login": "Login",
+        "Email": "Email",
+        "Password": "Password",
+        "🎯 Let's test your knowledge!": "🎯 Let's test your knowledge!",
+        "Ready to begin? Let's go! 🚀": "Ready to begin? Let's go! 🚀",
+        "Next": "Next",
+        "Quiz Completed!": "Quiz Completed!",
+        "✅ You scored X out of Y": "✅ You scored X out of Y",
+        "Analyze Skill Gaps": "Analyze Skill Gaps",
+        "🔍 Skill Gap Analysis": "🔍 Skill Gap Analysis",
+        "Retake Quiz": "Retake Quiz",
+        "Back to Login": "Back to Login"
+      },
+      hi: {
+        "Login": "लॉगिन",
+        "Email": "ईमेल",
+        "Password": "पासवर्ड",
+        "🎯 Let's test your knowledge!": "🎯 आइए आपका ज्ञान जांचते हैं!",
+        "Ready to begin? Let's go! 🚀": "शुरू करने के लिए तैयार? चलिए शुरू करते हैं! 🚀",
+        "Next": "अगला",
+        "Quiz Completed!": "क्विज़ पूरा हुआ!",
+        "✅ You scored X out of Y": "✅ आपने Y में से X अंक प्राप्त किए",
+        "Analyze Skill Gaps": "कौशल अंतराल का विश्लेषण करें",
+        "🔍 Skill Gap Analysis": "🔍 कौशल अंतराल विश्लेषण",
+        "Retake Quiz": "क्विज़ फिर से लें",
+        "Back to Login": "लॉगिन पर वापस जाएं"
+      }
+    };
+
+    // Function to change language
+    function changeLanguage(lang) {
+      // Update all elements with data attributes
+      document.querySelectorAll('[data-en]').forEach(element => {
+        if (element.tagName === 'INPUT' && element.hasAttribute('data-en-placeholder')) {
+          element.placeholder = translations[lang][element.getAttribute('data-en-placeholder')];
+        } else {
+          element.textContent = translations[lang][element.getAttribute('data-en')];
+        }
+      });
+
+      // Update quiz questions if they exist
+      if (window.currentQuestions) {
+        updateQuizLanguage(lang);
+      }
+
+      // Store language preference
+      localStorage.setItem('selectedLanguage', lang);
+    }
+
+    // Function to update quiz questions language
+    function updateQuizLanguage(lang) {
+      if (window.currentQuestions && window.currentQuestionIndex !== undefined) {
+        const currentQuestion = window.currentQuestions[window.currentQuestionIndex];
+        if (currentQuestion) {
+          displayQuestion(currentQuestion, lang);
+        }
+      }
+    }
+
+    // Initialize language on page load
+    window.addEventListener('load', function() {
+      const savedLanguage = localStorage.getItem('selectedLanguage') || 'en';
+      document.getElementById('language-select').value = savedLanguage;
+      changeLanguage(savedLanguage);
+    });
+  </script>
+</body>
+</html>
